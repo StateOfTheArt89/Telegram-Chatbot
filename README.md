@@ -10,6 +10,8 @@ Makes use of vysheng's Telegram messenger CLI (https://github.com/vysheng/tg)
 Lua 5.x
 Luarocks
 
-> luarocks install luasocket
-> luarocks install luasec
-> luarocks install lua-cjson
+```
+luarocks install luasocket
+luarocks install luasec
+luarocks install lua-cjson
+```
