@@ -1,5 +1,7 @@
 require('luarocks.require')
+require('socket')
 http = require('socket.http')
+https = require('ssl.https')
 json = require('cjson')
 
 print("Bot gestartet...")
@@ -105,7 +107,7 @@ function GoogleImageAction.getInfo()
 end
 
 function GoogleImageAction.isActionTriggered(input)
-  return not (string.match(input, 'gi .*') == nil)
+  return not (string.match(input, '^gi .*') == nil)
 end
 
 function GoogleImageAction.url_encode(str)
@@ -127,21 +129,21 @@ end
 
 function GoogleImageAction.download_image(image_url)
   local image_name = string.gsub(image_url,'http:','')
-  image_name = string.gsub(image_name,'/','_')
-  print(image_name)
+  image_path = 'image/'..'img'..socket.gettime()..'.jpg'
 
-  local file = ltn12.sink.file(io.open('image/'..image_name, 'w'))
+  local file = ltn12.sink.file(io.open(image_path, 'w'))
   http.request {
       url = image_url,
       sink = file,
   }
-  return image_name
+  return image_path
 end
 
 function GoogleImageAction.doAction(receiver, input)
+  input = string.sub(input, 4)
   local img_url = GoogleImageAction.find_image(input)
-  local img_name = GoogleImageAction.download_image(image_url)
-  send_photo(receiver, 'image/'..img_name,ok_cb,false)
+  local img_path = GoogleImageAction.download_image(image_url)
+  send_photo(receiver, img_path,ok_cb,false)
 end
 
 ----------- Help Action
@@ -164,6 +166,28 @@ function HelpAction.isActionTriggered(input)
   return string.lower(input) == 'help'
 end
 
------------
+----------- Hacker News Action
 
-available_actions = {HelpAction, InDerTatAction, GoogleImageAction, Magic8BallAction}
+HackerNewsAction = GenericBotAction.new()
+
+function HackerNewsAction.getInfo()
+  return 'hackernews'
+end
+
+function HackerNewsAction.doAction(receiver, input)
+  result = '[Bot] Hacker News Top5:\n'
+  top_stories_json = https.request('https://hacker-news.firebaseio.com/v0/topstories.json')
+  top_stories = json.decode(top_stories_json)
+  for i = 1, 5 do
+    story_json = https.request('https://hacker-news.firebaseio.com/v0/item/'..top_stories[i]..'.json')
+    story = json.decode(story_json)
+    result = result .. i .. '. ' .. story.title .. ' - ' .. story.url .. '\n'
+  end
+  send_msg(receiver, result,ok_cb,false)
+end
+
+function HackerNewsAction.isActionTriggered(input)
+  return string.lower(input) == 'hackernews'
+end
+
+available_actions = {HelpAction, InDerTatAction, GoogleImageAction, Magic8BallAction, HackerNewsAction}
