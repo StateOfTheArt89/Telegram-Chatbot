@@ -82,15 +82,15 @@ end
 Magic8BallAction = GenericBotAction.new()
 
 function Magic8BallAction.getInfo()
-  return 'magic 8ball'
+  return 'orakel'
 end
 
 function Magic8BallAction.isActionTriggered(input)
-  return string.lower(input) == 'magic 8ball'
+  return string.lower(input) == 'orakel'
 end
 
 function Magic8BallAction.get8BallAnswer()
- answers = {'Ja!', 'Nein!', 'Mhh, vielleicht', 'Kannst nichts machen, steckste nicht drin'}
+ answers = {'Ja!', 'Nein!', 'Vielleicht'}
  return '[Bot] ' .. answers[math.random(#answers)]
 end
 
@@ -146,6 +146,27 @@ function GoogleImageAction.doAction(receiver, input)
   send_photo(receiver, img_path,ok_cb,false)
 end
 
+----------- Mustache
+
+MustacheAction = GenericBotAction.new()
+
+function MustacheAction.getInfo()
+  return "mustache <image>"
+end
+
+function MustacheAction.doAction(receiver, input)
+  input = string.sub(input, 9)
+  local img_url = GoogleImageAction.find_image(input)
+  local mustache_url = 'http://mustachify.me/?src='..img_url
+  local img_path = GoogleImageAction.download_image(mustache_url)
+  send_photo(receiver, img_path,ok_cb,false)
+end
+
+function MustacheAction.isActionTriggered(input)
+  return not (string.match(input, '^mustache .*') == nil)
+end
+
+
 ----------- Help Action
 
 HelpAction = GenericBotAction.new()
@@ -190,4 +211,4 @@ function HackerNewsAction.isActionTriggered(input)
   return string.lower(input) == 'hackernews'
 end
 
-available_actions = {HelpAction, InDerTatAction, GoogleImageAction, Magic8BallAction, HackerNewsAction}
+available_actions = {HelpAction, InDerTatAction, GoogleImageAction, MustacheAction, Magic8BallAction, HackerNewsAction}
