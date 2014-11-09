@@ -128,7 +128,6 @@ function GoogleImageAction.find_image(search_string)
 end
 
 function GoogleImageAction.download_image(image_url)
-  local image_name = string.gsub(image_url,'http:','')
   image_path = 'image/'..'img'..socket.gettime()..'.jpg'
 
   local file = ltn12.sink.file(io.open(image_path, 'w'))
@@ -164,6 +163,48 @@ end
 
 function MustacheAction.isActionTriggered(input)
   return not (string.match(input, '^mustache .*') == nil)
+end
+
+----------- XKCD
+
+XKCDAction = GenericBotAction.new()
+
+function XKCDAction.getInfo()
+  return "xkcd"
+end
+
+function XKCDAction.doAction(receiver, input)
+  input = string.sub(input, 6)
+  local url = 'http://xkcd.com/info.0.json'
+  if string.len(input) > 0 then
+    url = 'http://xkcd.com/'.. input ..'/info.0.json'
+  end
+  local json_string = http.request(url)
+  local json_data = json.decode(json_string)
+  local img_url = json_data.img
+  local img_path = GoogleImageAction.download_image(img_url)
+  send_photo(receiver, img_path,ok_cb,false)
+end
+
+function XKCDAction.isActionTriggered(input)
+  return not (string.match(input, '^xkcd .*') == nil)
+end
+
+----------- CommitMessage
+
+CommitMessageAction = GenericBotAction.new()
+
+function CommitMessageAction.getInfo()
+  return "commit message"
+end
+
+function CommitMessageAction.doAction(receiver, input)
+  local commitmsg = http.request('http://whatthecommit.com/index.txt')
+  send_msg(receiver, '[Bot] '..commitmsg,ok_cb,false)
+end
+
+function CommitMessageAction.isActionTriggered(input)
+  return string.lower(input) == 'commit message'
 end
 
 
@@ -211,4 +252,4 @@ function HackerNewsAction.isActionTriggered(input)
   return string.lower(input) == 'hackernews'
 end
 
-available_actions = {HelpAction, InDerTatAction, GoogleImageAction, MustacheAction, Magic8BallAction, HackerNewsAction}
+available_actions = {HelpAction, InDerTatAction, GoogleImageAction, MustacheAction, Magic8BallAction, HackerNewsAction, XKCDAction, CommitMessageAction}
